@@ -1,6 +1,7 @@
 import pygame
 from pygame.locals import *
 import sys
+import random
 
 width = 580
 height = 920
@@ -13,6 +14,8 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 pass_through_check = False
 jump = False
+plat_img = pygame.Surface((100, 20))
+plat_img.fill((255, 255, 255))
 
 
 class Player(pygame.sprite.Sprite):
@@ -43,7 +46,7 @@ class Player(pygame.sprite.Sprite):
             self.pos.x = 0
         if self.pos.x < 0:
             self.pos.x = width
-        if self.vel.y > 0:
+        if self.vel.y > 5:
             jump = True
         elif self.vel.y < 0:
             jump = False
@@ -77,24 +80,63 @@ class Platform(pygame.sprite.Sprite):
 class Platform2(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
+        x = random.randint(50, 550)
+        y = random.randint(100, 670)
+        self.surf = plat_img
+        self.rect = self.surf.get_rect(center=(x, y))
 
-        self.surf = pygame.Surface((100, 20))
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect(center=(width / 2, height - 590))
+
+class Platform3(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        x = random.randint(50, 550)
+        y = random.randint(100, 670)
+        self.surf = plat_img
+        self.rect = self.surf.get_rect(center=(x, y))
+
+
+class Platform4(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        x = random.randint(50, 550)
+        y = random.randint(100, 670)
+        self.surf = plat_img
+        self.rect = self.surf.get_rect(center=(x, y))
+
+
+class Platform5(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        x = random.randint(50, 550)
+        y = random.randint(100, 670)
+        self.surf = plat_img
+        self.rect = self.surf.get_rect(center=(x, y))
 
 
 P1 = Player()
 PT1 = Platform()
 PT2 = Platform2()
+PT3 = Platform3()
+PT4 = Platform4()
+PT5 = Platform5()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 all_sprites.add(PT1)
 all_sprites.add(PT2)
+all_sprites.add(PT3)
+all_sprites.add(PT4)
+all_sprites.add(PT5)
+
 
 platforms = pygame.sprite.Group()
 platforms.add(PT1)
 platforms.add(PT2)
+platforms.add(PT3)
+platforms.add(PT4)
+platforms.add(PT5)
+
+
 
 while True:
     screen.fill(pygame.Color("black"))
