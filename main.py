@@ -15,7 +15,17 @@ clock = pygame.time.Clock()
 pass_through_check = False
 jump = False
 plat_img = pygame.Surface((100, 20))
-plat_img.fill((255, 255, 255))
+plat_img.fill("red")
+MAX_PLATFORMS = 10
+SCROLL_THRESH = 200
+scroll = 0
+bg_scroll = 0
+bg_image = pygame.image.load("graphic/background.png").convert_alpha()
+
+
+def draw_bg(bg_scroll):
+    screen.blit(bg_image, (0, 0 + bg_scroll))
+    screen.blit(bg_image, (0, -600 + bg_scroll))
 
 
 class Player(pygame.sprite.Sprite):
@@ -25,7 +35,7 @@ class Player(pygame.sprite.Sprite):
         self.surf.fill((128, 255, 40))
         self.rect = self.surf.get_rect()
 
-        self.pos = vec((200, 100))
+        self.pos = vec((200, 400))
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
 
@@ -46,17 +56,20 @@ class Player(pygame.sprite.Sprite):
             self.pos.x = 0
         if self.pos.x < 0:
             self.pos.x = width
+
         if self.vel.y > 5:
             jump = True
         elif self.vel.y < 0:
             jump = False
 
+        if self.pos.y > 1000:
+            pygame.quit()
+
         self.rect.midbottom = self.pos
 
     def update(self):
         global pass_through_check
-
-        hits = pygame.sprite.spritecollide(P1, platforms, False)
+        hits = pygame.sprite.spritecollide(P1, platform_group, False)
         if hits and jump == True:
             self.pos.y = hits[0].rect.top + 1
             self.vel.y = 0
@@ -70,86 +83,46 @@ class Player(pygame.sprite.Sprite):
 
 
 class Platform(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.surf = pygame.Surface((width, 20))
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect(center=(width / 2, height - 400))
+    def __init__(self, x2, y2):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = plat_img
+        self.rect = self.image.get_rect()
+        self.rect.x = x2
+        self.rect.y = y2
 
 
-class Platform2(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        x = random.randint(50, 550)
-        y = random.randint(100, 670)
-        self.surf = plat_img
-        self.rect = self.surf.get_rect(center=(x, y))
 
+platform_group = pygame.sprite.Group()
 
-class Platform3(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        x = random.randint(50, 550)
-        y = random.randint(100, 670)
-        self.surf = plat_img
-        self.rect = self.surf.get_rect(center=(x, y))
-
-
-class Platform4(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        x = random.randint(50, 550)
-        y = random.randint(100, 670)
-        self.surf = plat_img
-        self.rect = self.surf.get_rect(center=(x, y))
-
-
-class Platform5(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        x = random.randint(50, 550)
-        y = random.randint(100, 670)
-        self.surf = plat_img
-        self.rect = self.surf.get_rect(center=(x, y))
-
+for p in range(MAX_PLATFORMS):
+    p_w = random.randint(40, 60)
+    p_x = random.randint(0, width - p_w)
+    p_y = p * random.randint(80, 120)
+    platformp = Platform(p_x, p_y)
+    platform_group.add(platformp)
 
 P1 = Player()
-PT1 = Platform()
-PT2 = Platform2()
-PT3 = Platform3()
-PT4 = Platform4()
-PT5 = Platform5()
+
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
-all_sprites.add(PT1)
-all_sprites.add(PT2)
-all_sprites.add(PT3)
-all_sprites.add(PT4)
-all_sprites.add(PT5)
-
-
-platforms = pygame.sprite.Group()
-platforms.add(PT1)
-platforms.add(PT2)
-platforms.add(PT3)
-platforms.add(PT4)
-platforms.add(PT5)
-
 
 
 while True:
-    screen.fill(pygame.Color("black"))
-
+    screen.fill("black")
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
             sys.exit()
 
-    P1.move()
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
+    platform_group.draw(screen)
+    P1.move()
     P1.update()
+
+    pygame.draw.line(screen, "white", (0, SCROLL_THRESH), (width, SCROLL_THRESH))
+
     pygame.display.flip()
     pygame.display.update()
     clock.tick(fps)
