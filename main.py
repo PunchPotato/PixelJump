@@ -15,17 +15,18 @@ clock = pygame.time.Clock()
 pass_through_check = False
 jump = False
 plat_img = pygame.Surface((100, 20))
-plat_img.fill("red")
-MAX_PLATFORMS = 10
-SCROLL_THRESH = 200
+plat_img.fill("black")
+max_platforms = 10
+scroll_height = 200
 scroll = 0
 bg_scroll = 0
 bg_image = pygame.image.load("graphic/background.png").convert_alpha()
+bg_image_big = pygame.transform.scale(bg_image, (580, 920))
 
 
 def draw_bg(bg_scroll):
-    screen.blit(bg_image, (0, 0 + bg_scroll))
-    screen.blit(bg_image, (0, -600 + bg_scroll))
+    screen.blit(bg_image_big, (0, 0 + bg_scroll))
+    screen.blit(bg_image_big, (0, -600 + bg_scroll))
 
 
 class Player(pygame.sprite.Sprite):
@@ -41,6 +42,7 @@ class Player(pygame.sprite.Sprite):
 
     def move(self):
         global jump
+        global scroll
         self.acc = vec(0, 0.35)
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[K_LEFT]:
@@ -67,6 +69,15 @@ class Player(pygame.sprite.Sprite):
 
         self.rect.midbottom = self.pos
 
+        if self.rect.top <= scroll_height:
+            if self.vel.y < 0:
+                scroll = -self.vel.y
+
+        self.rect.x += self.vel.x
+        self.rect.y += self.vel.y + scroll
+
+        return scroll
+
     def update(self):
         global pass_through_check
         hits = pygame.sprite.spritecollide(P1, platform_group, False)
@@ -90,13 +101,15 @@ class Platform(pygame.sprite.Sprite):
         self.rect.x = x2
         self.rect.y = y2
 
+    def update(self, scroll):
+        # update platform's vertical position
+        self.rect.y += scroll
 
 
 platform_group = pygame.sprite.Group()
 
-for p in range(MAX_PLATFORMS):
-    p_w = random.randint(40, 60)
-    p_x = random.randint(0, width - p_w)
+for p in range(max_platforms):
+    p_x = random.randint(0, width)
     p_y = p * random.randint(80, 120)
     platformp = Platform(p_x, p_y)
     platform_group.add(platformp)
@@ -109,19 +122,26 @@ all_sprites.add(P1)
 
 
 while True:
-    screen.fill("black")
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
             sys.exit()
+
+    if bg_scroll >= 600:
+        bg_scroll += scroll
+        bg_scroll = 0
+    draw_bg(bg_scroll)
+
+    # update platforms
+    platform_group.update(scroll)
 
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
     platform_group.draw(screen)
     P1.move()
     P1.update()
-
-    pygame.draw.line(screen, "white", (0, SCROLL_THRESH), (width, SCROLL_THRESH))
+    pygame.draw.line(screen, "black", (0, scroll_height), (width, scroll_height))
 
     pygame.display.flip()
     pygame.display.update()
