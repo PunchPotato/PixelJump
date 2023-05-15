@@ -17,7 +17,7 @@ jump = False
 plat_img = pygame.Surface((100, 20))
 plat_img.fill("black")
 max_platforms = 10
-scroll_height = 200
+scroll_height = 400
 scroll = 0
 bg_scroll = 0
 bg_image = pygame.image.load("graphic/background.png").convert_alpha()
@@ -105,14 +105,15 @@ class Platform(pygame.sprite.Sprite):
         # update platform's vertical position
         self.rect.y += scroll
 
+        if self.rect.top > height:
+            self.kill()
+            print("dead")
+
 
 platform_group = pygame.sprite.Group()
 
-for p in range(max_platforms):
-    p_x = random.randint(0, width)
-    p_y = p * random.randint(80, 120)
-    platformp = Platform(p_x, p_y)
-    platform_group.add(platformp)
+platform = Platform(width // 2 - 50, height - 50)
+platform_group.add(platform)
 
 P1 = Player()
 
@@ -133,8 +134,14 @@ while True:
         bg_scroll = 0
     draw_bg(bg_scroll)
 
-    # update platforms
     platform_group.update(scroll)
+
+    if len(platform_group) < max_platforms:
+        p_w = random.randint(40, 60)
+        p_x = random.randint(0, width - p_w)
+        p_y = platform.rect.y - random.randint(80, 200)
+        platform = Platform(p_x, p_y)
+        platform_group.add(platform)
 
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
