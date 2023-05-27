@@ -17,7 +17,8 @@ jump = False
 plat_img = pygame.Surface((100, 20))
 plat_img.fill("black")
 max_platforms = 10
-scroll_height = 400
+scroll_height = 300
+higher_scroll_height = 0
 scroll = 0
 bg_scroll = 0
 bg_image = pygame.image.load("graphic/background.png").convert_alpha()
@@ -36,13 +37,14 @@ class Player(pygame.sprite.Sprite):
         self.surf.fill((128, 255, 40))
         self.rect = self.surf.get_rect()
 
-        self.pos = vec((200, 400))
+        self.pos = vec((300, 300))
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
 
     def move(self):
         global jump
         global scroll
+        scroll = 0
         self.acc = vec(0, 0.35)
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[K_LEFT]:
@@ -67,15 +69,17 @@ class Player(pygame.sprite.Sprite):
         if self.pos.y > 1000:
             pygame.quit()
 
-        self.rect.midbottom = self.pos
+        self.rect.midtop = self.pos
 
         if self.rect.top <= scroll_height:
-            if self.vel.y < 0:
+
+            if self.vel.y <= 0:
+                self.pos.y = scroll_height
                 scroll = -self.vel.y
 
-        self.rect.x += self.vel.x
-        self.rect.y += self.vel.y + scroll
-
+        #self.rect.x += self.vel.x
+        #self.rect.y += self.vel.y + scroll
+        print(scroll)
         return scroll
 
     def update(self):
@@ -102,12 +106,11 @@ class Platform(pygame.sprite.Sprite):
         self.rect.y = y2
 
     def update(self, scroll):
-        # update platform's vertical position
+
         self.rect.y += scroll
 
         if self.rect.top > height:
             self.kill()
-            print("dead")
 
 
 platform_group = pygame.sprite.Group()
@@ -148,7 +151,6 @@ while True:
     platform_group.draw(screen)
     P1.move()
     P1.update()
-    pygame.draw.line(screen, "black", (0, scroll_height), (width, scroll_height))
 
     pygame.display.flip()
     pygame.display.update()
