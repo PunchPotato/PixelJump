@@ -14,27 +14,30 @@ screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 pass_through_check = False
 jump = False
-plat_img = pygame.Surface((100, 20))
-plat_img.fill("black")
+plat_img = pygame.image.load("graphic/groundy ground.png").convert_alpha()
 max_platforms = 10
 scroll_height = 300
 higher_scroll_height = 0
 scroll = 0
 bg_scroll = 0
-bg_image = pygame.image.load("graphic/background.png").convert_alpha()
-bg_image_big = pygame.transform.scale(bg_image, (580, 920))
+bg_image = pygame.image.load("graphic/silly background.png").convert_alpha()
+#bg_image_big = pygame.transform.scale(bg_image, (580, 920))
+sprite_1 = pygame.image.load("graphic/sprite 1.png")
+sprite_2 = pygame.image.load("graphic/sprite 2.png")
+time = pygame.time.get_ticks()
+spring_img = pygame.Surface((20, 20))
+spring_img.fill("grey")
 
 
 def draw_bg(bg_scroll):
-    screen.blit(bg_image_big, (0, 0 + bg_scroll))
-    screen.blit(bg_image_big, (0, -600 + bg_scroll))
+    screen.blit(bg_image, (0, 0 + bg_scroll))
+    screen.blit(bg_image, (0, -920 + bg_scroll))
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
-        self.surf = pygame.Surface((30, 30))
-        self.surf.fill((128, 255, 40))
+        self.surf = sprite_1
         self.rect = self.surf.get_rect()
 
         self.pos = vec((300, 300))
@@ -48,9 +51,9 @@ class Player(pygame.sprite.Sprite):
         self.acc = vec(0, 0.35)
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[K_LEFT]:
-            self.acc.x = -acceleration
+            self.acc.x = -acceleration - 0.1
         if pressed_keys[K_RIGHT]:
-            self.acc.x = acceleration
+            self.acc.x = acceleration + 0.1
 
         self.acc.x += self.vel.x * friction
         self.vel += self.acc
@@ -72,23 +75,25 @@ class Player(pygame.sprite.Sprite):
         self.rect.midtop = self.pos
 
         if self.rect.top <= scroll_height:
-
             if self.vel.y <= 0:
                 self.pos.y = scroll_height
                 scroll = -self.vel.y
 
-        #self.rect.x += self.vel.x
-        #self.rect.y += self.vel.y + scroll
-        print(scroll)
         return scroll
 
     def update(self):
         global pass_through_check
+        global time
         hits = pygame.sprite.spritecollide(P1, platform_group, False)
         if hits and jump == True:
             self.pos.y = hits[0].rect.top + 1
             self.vel.y = 0
             P1.jump()
+            self.surf = sprite_2
+            time = 0
+
+        elif time >= 25:
+            self.surf = sprite_1
 
     def jump(self):
         global pass_through_check
@@ -113,6 +118,21 @@ class Platform(pygame.sprite.Sprite):
             self.kill()
 
 
+class Spring(pygame.sprite.Sprite):
+    def __init__(self, x2, y2):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = spring_img
+        self.rect = self.image.get_rect()
+        self.rect.x = x2
+        self.rect.y = y2
+
+    def update(self, scroll):
+        self.rect.y += scroll
+
+        if self.rect.top > height:
+            self.kill()
+
+
 platform_group = pygame.sprite.Group()
 
 platform = Platform(width // 2 - 50, height - 50)
@@ -120,27 +140,25 @@ platform_group.add(platform)
 
 P1 = Player()
 
-
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 
 
 while True:
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
             sys.exit()
 
-    if bg_scroll >= 600:
-        bg_scroll += scroll
+    bg_scroll += scroll
+    if bg_scroll >= height:
         bg_scroll = 0
     draw_bg(bg_scroll)
-
+    time += 1
     platform_group.update(scroll)
 
     if len(platform_group) < max_platforms:
-        p_w = random.randint(40, 60)
+        p_w = random.randint(30, 60)
         p_x = random.randint(0, width - p_w)
         p_y = platform.rect.y - random.randint(80, 200)
         platform = Platform(p_x, p_y)
