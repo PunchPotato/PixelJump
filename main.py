@@ -26,8 +26,13 @@ sprite_1 = pygame.image.load("graphic/sprite 1.png")
 sprite_2 = pygame.image.load("graphic/sprite 2.png")
 time = pygame.time.get_ticks()
 spring_img = pygame.Surface((20, 20))
-spring_img.fill("grey")
+spring_img.fill("black")
+max_springs = 2
+score = 0
+score_line = pygame.image.load("graphic/score background.png")
 
+def get_font(size):
+    return pygame.font.SysFont("consolas", size, bold=True)
 
 def draw_bg(bg_scroll):
     screen.blit(bg_image, (0, 0 + bg_scroll))
@@ -40,7 +45,7 @@ class Player(pygame.sprite.Sprite):
         self.surf = sprite_1
         self.rect = self.surf.get_rect()
 
-        self.pos = vec((300, 300))
+        self.pos = vec((300, 800))
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
 
@@ -84,11 +89,26 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         global pass_through_check
         global time
+        global score
         hits = pygame.sprite.spritecollide(P1, platform_group, False)
+        hits_spring = pygame.sprite.spritecollide(P1, spring_group, False)
+        if scroll:
+            score += 2
+        text = get_font(70).render(str(score), True, "black")
+        text_rect = text.get_rect()
+        text_rect.center = (width // 8, height // 18)
+        screen.blit(text, text_rect)
         if hits and jump == True:
             self.pos.y = hits[0].rect.top + 1
             self.vel.y = 0
             P1.jump()
+            self.surf = sprite_2
+            time = 0
+
+        if hits_spring and jump == True:
+            self.pos.y = hits[0].rect.top + 1
+            self.vel.y = 0
+            P1.spring_jump()
             self.surf = sprite_2
             time = 0
 
@@ -100,6 +120,10 @@ class Player(pygame.sprite.Sprite):
         global jump
         if jump:
             self.vel.y = -15
+
+    def spring_jump(self):
+        if jump:
+            self.vel.y = -40
 
 
 class Platform(pygame.sprite.Sprite):
@@ -143,6 +167,9 @@ P1 = Player()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 
+spring_group = pygame.sprite.Group()
+spring = Spring(400, -980)
+spring_group.add(spring)
 
 while True:
     for event in pygame.event.get():
@@ -158,11 +185,18 @@ while True:
     platform_group.update(scroll)
 
     if len(platform_group) < max_platforms:
-        p_w = random.randint(30, 60)
-        p_x = random.randint(0, width - p_w)
+        p_x = random.randint(0, 500)
         p_y = platform.rect.y - random.randint(80, 200)
         platform = Platform(p_x, p_y)
         platform_group.add(platform)
+
+    #if len(spring_group) < max_springs:
+        #s_x = random.randint(0, 500)
+        #s_y = spring.rect.y - random.randint(80, 200)
+        #spring = Spring(s_x, s_y)
+        #platform_group.add(spring)
+
+    screen.blit(score_line, (0, 0))
 
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
