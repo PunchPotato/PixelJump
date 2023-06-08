@@ -22,17 +22,19 @@ scroll = 0
 bg_scroll = 0
 bg_image = pygame.image.load("graphic/silly background.png").convert_alpha()
 #bg_image_big = pygame.transform.scale(bg_image, (580, 920))
-sprite_1 = pygame.image.load("graphic/sprite 1.png")
-sprite_2 = pygame.image.load("graphic/sprite 2.png")
+sprite_1 = pygame.image.load("graphic/CAT SPRITE  DARK 1.png").convert_alpha()
+sprite_2 = pygame.image.load("graphic/CAT SPRITE  DARK 2.png").convert_alpha()
 time = pygame.time.get_ticks()
 spring_img = pygame.Surface((20, 20))
 spring_img.fill("black")
 max_springs = 2
 score = 0
-score_line = pygame.image.load("graphic/score background.png")
+score_line = pygame.image.load("graphic/score background.png").convert_alpha()
+
 
 def get_font(size):
-    return pygame.font.SysFont("consolas", size, bold=True)
+    return pygame.font.Font("TenOClockRegular-8L7n.ttf", size)
+
 
 def draw_bg(bg_scroll):
     screen.blit(bg_image, (0, 0 + bg_scroll))
@@ -48,6 +50,9 @@ class Player(pygame.sprite.Sprite):
         self.pos = vec((300, 800))
         self.vel = vec(0, 0)
         self.acc = vec(0, 0)
+
+        self.fog = pygame.image.load("graphic/foggy.png").convert_alpha()
+        self.spot_light = pygame.image.load("graphic/Spot Light.png").convert_alpha()
 
     def move(self):
         global jump
@@ -112,7 +117,7 @@ class Player(pygame.sprite.Sprite):
             self.surf = sprite_2
             time = 0
 
-        elif time >= 25:
+        elif self.vel.y > 0:
             self.surf = sprite_1
 
     def jump(self):
@@ -124,6 +129,10 @@ class Player(pygame.sprite.Sprite):
     def spring_jump(self):
         if jump:
             self.vel.y = -40
+
+    def light_effect(self):
+        screen.blit(self.fog, (0, 0))
+        screen.blit(self.spot_light, self.rect)
 
 
 class Platform(pygame.sprite.Sprite):
@@ -196,14 +205,13 @@ while True:
         #spring = Spring(s_x, s_y)
         #platform_group.add(spring)
 
-    screen.blit(score_line, (0, 0))
-
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
     platform_group.draw(screen)
+    P1.light_effect()
+    screen.blit(score_line, (0, 0))
     P1.move()
     P1.update()
-
     pygame.display.flip()
     pygame.display.update()
     clock.tick(fps)
