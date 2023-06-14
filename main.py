@@ -30,6 +30,8 @@ spring_img.fill("black")
 max_springs = 2
 score = 0
 score_line = pygame.image.load("graphic/score background.png").convert_alpha()
+platform_vel = 5
+max_moving_platforms = 2
 
 
 def get_font(size):
@@ -96,7 +98,6 @@ class Player(pygame.sprite.Sprite):
         global time
         global score
         hits = pygame.sprite.spritecollide(P1, platform_group, False)
-        hits_spring = pygame.sprite.spritecollide(P1, spring_group, False)
         if scroll:
             score += 2
         text = get_font(70).render(str(score), True, "black")
@@ -104,20 +105,13 @@ class Player(pygame.sprite.Sprite):
         text_rect.center = (width // 8, height // 18)
         screen.blit(text, text_rect)
         if hits and jump == True:
-            self.pos.y = hits[0].rect.top + 1
+            self.rect.bottom = hits[0].rect.top + 1
             self.vel.y = 0
             P1.jump()
             self.surf = sprite_2
             time = 0
 
-        if hits_spring and jump == True:
-            self.pos.y = hits[0].rect.top + 1
-            self.vel.y = 0
-            P1.spring_jump()
-            self.surf = sprite_2
-            time = 0
-
-        elif self.vel.y > 0:
+        elif self.vel.y > 1:
             self.surf = sprite_1
 
     def jump(self):
@@ -132,10 +126,26 @@ class Player(pygame.sprite.Sprite):
 
     def light_effect(self):
         screen.blit(self.fog, (0, 0))
-        screen.blit(self.spot_light, self.rect)
+        screen.blit(self.spot_light, (self.pos.x - 180, self.pos.y - 160))
 
 
 class Platform(pygame.sprite.Sprite):
+    def __init__(self, x2, y2):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = plat_img
+        self.rect = self.image.get_rect()
+        self.rect.x = x2
+        self.rect.y = y2
+
+    def update(self, scroll):
+
+        self.rect.y += scroll
+
+        if self.rect.top > height:
+            self.kill()
+
+
+class MovingPlatform(pygame.sprite.Sprite):
     def __init__(self, x2, y2):
         pygame.sprite.Sprite.__init__(self)
         self.image = plat_img
@@ -160,16 +170,28 @@ class Spring(pygame.sprite.Sprite):
         self.rect.y = y2
 
     def update(self, scroll):
+        hits_spring = pygame.sprite.spritecollide(P1, spring_group, False)
         self.rect.y += scroll
 
         if self.rect.top > height:
             self.kill()
 
+        if platform_group:
+            screen.blit(spring_img, top_plat)
+
+        if hits_spring and jump == True:
+            self.pos.y = hits_spring[0].rect.top + 1
+            self.vel.y = 0
+            P1.spring_jump()
+            self.surf = sprite_2
+
 
 platform_group = pygame.sprite.Group()
 
 platform = Platform(width // 2 - 50, height - 50)
+moving_platform = MovingPlatform(x2=True, y2=True)
 platform_group.add(platform)
+platform_group.add(moving_platform)
 
 P1 = Player()
 
@@ -177,9 +199,9 @@ all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 
 spring_group = pygame.sprite.Group()
-spring = Spring(400, -980)
-spring_group.add(spring)
-
+#spring = Spring(400, -980)
+#spring_group.add(spring)
+top_plat = platform.rect.midtop
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -199,19 +221,29 @@ while True:
         platform = Platform(p_x, p_y)
         platform_group.add(platform)
 
+    if len(platform_group) < max_moving_platforms:
+        mp_x = random.randint(0, 500)
+        mp_y = moving_platform.rect.y - random.randint(80, 200)
+        moving_platform = MovingPlatform(mp_x, mp_y)
+        platform_group.add(moving_platform)
+    if moving_platform.rect.left >= 500 or moving_platform.rect.left < 0:
+        platform_vel *= -1
+
+    moving_platform.rect.left += platform_vel
+
     #if len(spring_group) < max_springs:
         #s_x = random.randint(0, 500)
         #s_y = spring.rect.y - random.randint(80, 200)
         #spring = Spring(s_x, s_y)
         #platform_group.add(spring)
-
-    for entity in all_sprites:
-        screen.blit(entity.surf, entity.rect)
     platform_group.draw(screen)
     P1.light_effect()
+    for entity in all_sprites:
+        screen.blit(entity.surf, entity.rect)
     screen.blit(score_line, (0, 0))
     P1.move()
     P1.update()
+    #spring.update(scroll)
     pygame.display.flip()
     pygame.display.update()
     clock.tick(fps)
