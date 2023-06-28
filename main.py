@@ -15,7 +15,8 @@ clock = pygame.time.Clock()
 pass_through_check = False
 jump = False
 plat_img = pygame.image.load("graphic/groundy ground.png").convert_alpha()
-max_platforms = 10
+moving_plat_img = pygame.image.load("graphic/moving plat.png").convert_alpha()
+max_platforms = 15
 scroll_height = 300
 higher_scroll_height = 0
 scroll = 0
@@ -31,7 +32,8 @@ max_springs = 2
 score = 0
 score_line = pygame.image.load("graphic/score background.png").convert_alpha()
 platform_vel = 5
-max_moving_platforms = 2
+max_moving_platforms = 5
+platform_kill = 0
 
 
 def get_font(size):
@@ -138,27 +140,37 @@ class Platform(pygame.sprite.Sprite):
         self.rect.y = y2
 
     def update(self, scroll):
-
+        global platform_kill
         self.rect.y += scroll
 
         if self.rect.top > height:
             self.kill()
+            platform_kill += 1
 
 
 class MovingPlatform(pygame.sprite.Sprite):
     def __init__(self, x2, y2):
         pygame.sprite.Sprite.__init__(self)
-        self.image = plat_img
+        self.image = moving_plat_img
         self.rect = self.image.get_rect()
         self.rect.x = x2
         self.rect.y = y2
+        self.pos = (0, -100)
 
     def update(self, scroll):
-
+        global platform_vel
         self.rect.y += scroll
 
         if self.rect.top > height:
             self.kill()
+
+        if moving_platform.rect.left >= 500 or moving_platform.rect.left < 0:
+            platform_vel *= -1
+
+        moving_platform.rect.left += platform_vel
+
+        if platform_kill % 10:
+            pass
 
 
 class Spring(pygame.sprite.Sprite):
@@ -189,7 +201,7 @@ class Spring(pygame.sprite.Sprite):
 platform_group = pygame.sprite.Group()
 
 platform = Platform(width // 2 - 50, height - 50)
-moving_platform = MovingPlatform(x2=True, y2=True)
+moving_platform = MovingPlatform(0, -100)
 platform_group.add(platform)
 platform_group.add(moving_platform)
 
@@ -220,16 +232,6 @@ while True:
         p_y = platform.rect.y - random.randint(80, 200)
         platform = Platform(p_x, p_y)
         platform_group.add(platform)
-
-    if len(platform_group) < max_moving_platforms:
-        mp_x = random.randint(0, 500)
-        mp_y = moving_platform.rect.y - random.randint(80, 200)
-        moving_platform = MovingPlatform(mp_x, mp_y)
-        platform_group.add(moving_platform)
-    if moving_platform.rect.left >= 500 or moving_platform.rect.left < 0:
-        platform_vel *= -1
-
-    moving_platform.rect.left += platform_vel
 
     #if len(spring_group) < max_springs:
         #s_x = random.randint(0, 500)
