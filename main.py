@@ -16,7 +16,7 @@ pass_through_check = False
 jump = False
 plat_img = pygame.image.load("graphic/groundy ground.png").convert_alpha()
 moving_plat_img = pygame.image.load("graphic/moving plat.png").convert_alpha()
-max_platforms = 15
+max_platforms = 13
 scroll_height = 300
 higher_scroll_height = 0
 scroll = 0
@@ -149,76 +149,55 @@ class Platform(pygame.sprite.Sprite):
 
 
 class MovingPlatform(pygame.sprite.Sprite):
-    def __init__(self, x2, y2):
+    def __init__(self, x2, y2, speed):
         pygame.sprite.Sprite.__init__(self)
         self.image = moving_plat_img
         self.rect = self.image.get_rect()
         self.rect.x = x2
         self.rect.y = y2
-        self.pos = (0, -100)
+        self.speed = speed
 
     def update(self, scroll):
         global platform_vel
+        global moving_platform_on
+        global platform_kill
+
         self.rect.y += scroll
+        self.rect.x += self.speed
 
         if self.rect.top > height:
             self.kill()
+            platform_kill += 1
 
-        if moving_platform.rect.left >= 500 or moving_platform.rect.left < 0:
-            platform_vel *= -1
-
-        moving_platform.rect.left += platform_vel
-
-        if platform_kill % 10:
-            pass
-
-
-class Spring(pygame.sprite.Sprite):
-    def __init__(self, x2, y2):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = spring_img
-        self.rect = self.image.get_rect()
-        self.rect.x = x2
-        self.rect.y = y2
-
-    def update(self, scroll):
-        hits_spring = pygame.sprite.spritecollide(P1, spring_group, False)
-        self.rect.y += scroll
-
-        if self.rect.top > height:
-            self.kill()
-
-        if platform_group:
-            screen.blit(spring_img, top_plat)
-
-        if hits_spring and jump == True:
-            self.pos.y = hits_spring[0].rect.top + 1
-            self.vel.y = 0
-            P1.spring_jump()
-            self.surf = sprite_2
+        if self.rect.x > width:
+            self.rect.x = -150
+        if self.rect.x < -150:
+            self.rect.x = width
 
 
 platform_group = pygame.sprite.Group()
 
 platform = Platform(width // 2 - 50, height - 50)
-moving_platform = MovingPlatform(0, -100)
 platform_group.add(platform)
-platform_group.add(moving_platform)
+
+
+moving_platforms = []
 
 P1 = Player()
 
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 
-spring_group = pygame.sprite.Group()
-#spring = Spring(400, -980)
-#spring_group.add(spring)
 top_plat = platform.rect.midtop
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
             sys.exit()
+
+    for moving_platform in moving_platforms:
+        moving_platform.update()
+        moving_platform.draw(screen)
 
     bg_scroll += scroll
     if bg_scroll >= height:
@@ -233,11 +212,14 @@ while True:
         platform = Platform(p_x, p_y)
         platform_group.add(platform)
 
-    #if len(spring_group) < max_springs:
-        #s_x = random.randint(0, 500)
-        #s_y = spring.rect.y - random.randint(80, 200)
-        #spring = Spring(s_x, s_y)
-        #platform_group.add(spring)
+    if random.randint(0, 100) < 0.1 and len(moving_platforms) < 3:
+        moving_platform_width = random.randint(50, 200)
+        moving_platform_y = random.randint(-400, 0)
+        moving_platform_speed = random.choice([-2, -1, 1, 2])
+
+        moving_platform = MovingPlatform(moving_platform_width, moving_platform_y, moving_platform_speed)
+        platform_group.add(moving_platform)
+
     platform_group.draw(screen)
     P1.light_effect()
     for entity in all_sprites:
@@ -245,7 +227,6 @@ while True:
     screen.blit(score_line, (0, 0))
     P1.move()
     P1.update()
-    #spring.update(scroll)
     pygame.display.flip()
     pygame.display.update()
     clock.tick(fps)
