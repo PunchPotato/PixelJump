@@ -159,7 +159,6 @@ class MovingPlatform(pygame.sprite.Sprite):
 
     def update(self, scroll):
         global platform_vel
-        global moving_platform_on
         global platform_kill
 
         self.rect.y += scroll
@@ -175,12 +174,20 @@ class MovingPlatform(pygame.sprite.Sprite):
             self.rect.x = width
 
 
+class Spring:
+    def __init__(self, x, y, width, height):
+        self.rect = pygame.Rect(x, y, width, height)
+
+    def draw(self, window):
+        pygame.draw.rect(window, (0, 255, 0), self.rect)
+
+
 platform_group = pygame.sprite.Group()
 
 platform = Platform(width // 2 - 50, height - 50)
 platform_group.add(platform)
 
-
+springs = []
 moving_platforms = []
 
 P1 = Player()
@@ -199,6 +206,9 @@ while True:
         moving_platform.update()
         moving_platform.draw(screen)
 
+    for spring in springs:
+        spring.draw(screen)
+
     bg_scroll += scroll
     if bg_scroll >= height:
         bg_scroll = 0
@@ -213,12 +223,19 @@ while True:
         platform_group.add(platform)
 
     if random.randint(0, 100) < 0.1 and len(moving_platforms) < 3:
-        moving_platform_width = random.randint(50, 200)
+        moving_platform_x = random.randint(50, 200)
         moving_platform_y = random.randint(-400, 0)
         moving_platform_speed = random.choice([-2, -1, 1, 2])
 
-        moving_platform = MovingPlatform(moving_platform_width, moving_platform_y, moving_platform_speed)
+        moving_platform = MovingPlatform(moving_platform_x, moving_platform_y, moving_platform_speed)
         platform_group.add(moving_platform)
+
+        spring_width = 30
+        spring_height = 30
+        spring_x = moving_platform_x + random.randint(0, moving_platform.rect.width - spring_width)
+        spring_y = moving_platform_y - spring_height
+        spring = Spring(spring_x, spring_y, spring_width, spring_height)
+        springs.append(spring)
 
     platform_group.draw(screen)
     P1.light_effect()
