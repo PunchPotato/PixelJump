@@ -40,6 +40,28 @@ game_running = False
 main_menu_running = True
 
 
+def pause_button():
+
+    GAME_MOUSE_POS = pygame.mouse.get_pos()
+
+    PAUSE_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(550, 50),
+                          text_input="II", font=get_font(75), base_color="#d7fcd4", hovering_color="black")
+
+    for button in [PAUSE_BUTTON]:
+        button.changeColor(GAME_MOUSE_POS)
+        button.update(screen)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if PAUSE_BUTTON.checkForInput(GAME_MOUSE_POS):
+                main_menu()
+
+    pygame.display.update()
+
+
 # Font for text
 def get_font(size):
     return pygame.font.Font("TenOClockRegular-8L7n.ttf", size)
@@ -64,12 +86,12 @@ def main_menu():
         MENU_RECT = MENU_TEXT.get_rect(center=(width / 2, 100))
 
         PLAY_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 300),
-                             text_input="PLAY", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+                             text_input="PLAY", font=get_font(75), base_color="white", hovering_color="#d7fcd4")
         OPTIONS_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 500),
-                                text_input="OPTIONS", font=get_font(75), base_color="#d7fcd4",
-                                hovering_color="White")
+                                text_input="OPTIONS", font=get_font(75), base_color="white",
+                                hovering_color="#d7fcd4")
         QUIT_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 700),
-                             text_input="QUIT", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+                             text_input="QUIT", font=get_font(75), base_color="white", hovering_color="#d7fcd4")
 
         screen.blit(MENU_TEXT, MENU_RECT)
 
@@ -173,7 +195,7 @@ while True:
                 hits = pygame.sprite.spritecollide(P1, platform_group, False)
                 if scroll:
                     score += 2
-                text = get_font(70).render(str(score), True, "black")
+                text = get_font(70).render(str(score), True, "white")
                 text_rect = text.get_rect()
                 text_rect.center = (width // 8, height // 18)
                 screen.blit(text, text_rect)
@@ -303,7 +325,7 @@ while True:
                     platform_group.add(platform)
 
                 # Randomly spawns moving platform after conditions are met
-                if random.randint(0, 100) < 0.1 and len(moving_platforms) < 3:
+                if random.randint(0, 100) < 0.001 and len(moving_platforms) < 3:
                     moving_platform_x = random.randint(50, 200)
                     moving_platform_y = random.randint(-400, 0)
                     moving_platform_speed = random.choice([-2, -1, 1, 2])
@@ -340,9 +362,9 @@ while True:
                 for entity in all_sprites:
                     screen.blit(entity.surf, entity.rect)
                 screen.blit(score_line, (0, 0))
+                pause_button()
                 P1.move()
                 P1.update()
                 pygame.display.flip()
                 pygame.display.update()
                 clock.tick(fps)
-                
