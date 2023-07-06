@@ -38,17 +38,23 @@ max_moving_platforms = 5
 platform_kill = 0
 game_running = False
 main_menu_running = True
+pygame.mixer.set_num_channels(8)
+game_music = pygame.mixer.Sound("sound/menu- music.mp3")
+game_music.set_volume(0.2)
+click_sound = pygame.mixer.Sound("sound/click-21156.mp3")
+jump_sound = pygame.mixer.Sound("sound/fast-simple-chop-5-6270.mp3")
+jump_sound.set_volume(0.6)
+game_music.play(-1)
 
 
-def pause_button():
+def pause_button_icon():
+    game_mouse_pos = pygame.mouse.get_pos()
 
-    GAME_MOUSE_POS = pygame.mouse.get_pos()
-
-    PAUSE_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(550, 50),
+    pause_button = Button(image=pygame.image.load("graphic/blank.png"), pos=(550, 50),
                           text_input="II", font=get_font(75), base_color="#d7fcd4", hovering_color="black")
 
-    for button in [PAUSE_BUTTON]:
-        button.changeColor(GAME_MOUSE_POS)
+    for button in [pause_button]:
+        button.changeColor(game_mouse_pos)
         button.update(screen)
 
     for event in pygame.event.get():
@@ -56,7 +62,8 @@ def pause_button():
             pygame.quit()
             sys.exit()
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if PAUSE_BUTTON.checkForInput(GAME_MOUSE_POS):
+            if pause_button.checkForInput(game_mouse_pos):
+                pygame.mixer.Sound.play(click_sound)
                 main_menu()
 
     pygame.display.update()
@@ -80,23 +87,23 @@ def main_menu():
         global game_running
         screen.blit(bg_image, (0, 0))
 
-        MENU_MOUSE_POS = pygame.mouse.get_pos()
+        menu_mouse_pos = pygame.mouse.get_pos()
 
-        MENU_TEXT = get_font(100).render("MAIN MENU", True, (250, 250, 250))
-        MENU_RECT = MENU_TEXT.get_rect(center=(width / 2, 100))
+        menu_text = get_font(100).render("MAIN MENU", True, (250, 250, 250))
+        menu_rect = menu_text.get_rect(center=(width / 2, 100))
 
-        PLAY_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 300),
+        play_button = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 300),
                              text_input="PLAY", font=get_font(75), base_color="white", hovering_color="#d7fcd4")
-        OPTIONS_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 500),
+        options_button = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 500),
                                 text_input="OPTIONS", font=get_font(75), base_color="white",
                                 hovering_color="#d7fcd4")
-        QUIT_BUTTON = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 700),
+        quit_button = Button(image=pygame.image.load("graphic/blank.png"), pos=(width / 2, 700),
                              text_input="QUIT", font=get_font(75), base_color="white", hovering_color="#d7fcd4")
 
-        screen.blit(MENU_TEXT, MENU_RECT)
+        screen.blit(menu_text, menu_rect)
 
-        for button in [PLAY_BUTTON, OPTIONS_BUTTON, QUIT_BUTTON]:
-            button.changeColor(MENU_MOUSE_POS)
+        for button in [play_button, options_button, quit_button]:
+            button.changeColor(menu_mouse_pos)
             button.update(screen)
 
         for event in pygame.event.get():
@@ -104,14 +111,16 @@ def main_menu():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                if play_button.checkForInput(menu_mouse_pos):
+                    pygame.mixer.Sound.play(click_sound)
                     if not game_running:
                         game_running = True
                     main_menu_running = False
-                    print(True)
-                if OPTIONS_BUTTON.checkForInput(MENU_MOUSE_POS):
+                if options_button.checkForInput(menu_mouse_pos):
+                    pygame.mixer.Sound.play(click_sound)
                     pass
-                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                if quit_button.checkForInput(menu_mouse_pos):
+                    pygame.mixer.Sound.play(click_sound)
                     pygame.quit()
                     sys.exit()
 
@@ -132,7 +141,7 @@ while True:
         main_menu()
 
     if game_running:
-
+        game_music.set_volume(0.05)
         # Player character
         class Player(pygame.sprite.Sprite):
             def __init__(self):
@@ -201,9 +210,10 @@ while True:
                 screen.blit(text, text_rect)
 
                 # Collision + sprite animation
-                if hits and jump == True:
+                if hits and jump:
                     self.rect.bottom = hits[0].rect.top + 1
                     self.vel.y = 0
+                    pygame.mixer.Sound.play(jump_sound)
                     P1.jump()
                     self.surf = sprite_2
                     time = 0
@@ -325,7 +335,7 @@ while True:
                     platform_group.add(platform)
 
                 # Randomly spawns moving platform after conditions are met
-                if random.randint(0, 100) < 0.001 and len(moving_platforms) < 3:
+                if random.randint(0, 100) < 1 and len(moving_platforms) < 3:
                     moving_platform_x = random.randint(50, 200)
                     moving_platform_y = random.randint(-400, 0)
                     moving_platform_speed = random.choice([-2, -1, 1, 2])
@@ -362,7 +372,7 @@ while True:
                 for entity in all_sprites:
                     screen.blit(entity.surf, entity.rect)
                 screen.blit(score_line, (0, 0))
-                pause_button()
+                pause_button_icon()
                 P1.move()
                 P1.update()
                 pygame.display.flip()
